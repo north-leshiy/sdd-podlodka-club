@@ -710,7 +710,7 @@ const Person = ({ label, hot }: { label: string; hot?: boolean }) => (
   </div>
 );
 const TwoTracks: Page = () => (
-  <Frame n="02 · Внедрение" title="Сквозное внедрение: два трека" lead="Фокус не на отдельной роли, а на всей цепочке от смысла до прода." gap={56}>
+  <Frame n="02 · Внедрение" title="Сквозное внедрение: два трека" lead="С самого начала фокус был на всех ролях, а не только на разработке." gap={56}>
     <div className="rs-steps-row" style={{ display: 'flex', gap: 32 }}>
       <Steps>
         <Step>
