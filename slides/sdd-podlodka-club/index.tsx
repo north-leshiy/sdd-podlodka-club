@@ -1351,7 +1351,7 @@ const Thanks: Page = () => (
       </div>
     </div>
     <div className="rs-in rs-d3 rs-pop" style={{ flex: 'none', textAlign: 'center' }}>
-      <img src={qrChannelImg} alt="QR-код канала" style={{ width: 420, height: 420, borderRadius: 'var(--osd-radius)', background: '#fff', padding: 20, border: `1px solid ${line}` }} />
+      <img src={qrChannelImg} alt="QR-код канала" style={{ width: 400, height: 'auto', display: 'block', borderRadius: 'var(--osd-radius)', background: '#fff', padding: 20, border: `1px solid ${line}` }} />
       <div style={{ fontSize: 26, color: muted, marginTop: 20 }}>Мой канал</div>
     </div>
   </Live>
