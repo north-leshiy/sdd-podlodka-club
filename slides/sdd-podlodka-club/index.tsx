@@ -488,35 +488,14 @@ const DiagramPage = ({ n, title, eyebrow, children }: { n: string; title: ReactN
   </Live>
 );
 
-// ─── Схема хендофов (SVG): две дорожки, фиксированная геометрия ──────────────
-const feColor = '#f6d37a';
-const beColor = '#f2a3a3';
-const ctxColor = '#b7c9f2';
-const ROW_H = 64;
-const FE_Y = 40;
-const BE_Y = FE_Y + ROW_H;
-const PANEL_H = BE_Y + ROW_H + 10;
+// ─── Схема хендофов (SVG): перенесено из aaa-ai-2026 ─────────────────────────
+const feColor = '#f6d37a'; // фронтенд — работа
+const beColor = '#f2a3a3'; // бекенд — работа
+const ctxColor = '#b7c9f2'; // погружение в бизнес-логику
+const blockerColor = '#ffffff';
 
-type SegKind = 'fe' | 'be' | 'ctx' | 'blk';
-const segFill: Record<SegKind, string> = { fe: feColor, be: beColor, ctx: ctxColor, blk: '#ffffff' };
-const Seg = ({ x, w, y, kind }: { x: number; w: number; y: number; kind: SegKind }) => (
-  <rect x={x} y={y} width={w} height={ROW_H} fill={segFill[kind]} stroke={ink} strokeWidth={kind === 'blk' ? 2.5 : 1} />
-);
-const RowLabel = ({ y, children }: { y: number; children: string }) => (
-  <text x={0} y={y + ROW_H / 2 + 9} fontSize={28} fill={ink}>
-    {children}
-  </text>
-);
-const PanelLabel = ({ children }: { children: string }) => (
-  <text x={0} y={24} fontSize={26} fontWeight={800} fill={ink} letterSpacing="0.06em">
-    {children}
-  </text>
-);
-const PanelSvg = ({ children }: { children: ReactNode }) => (
-  <svg width={1640} height={PANEL_H} viewBox={`0 0 1640 ${PANEL_H}`} style={{ display: 'block', overflow: 'visible' }}>
-    {children}
-  </svg>
-);
+
+
 const LegendItem = ({ color, label, stroke }: { color: string; label: string; stroke?: boolean }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 26, color: muted, whiteSpace: 'nowrap' }}>
     <span style={{ width: 36, height: 26, background: color, border: `${stroke ? 2 : 1}px solid ${ink}`, display: 'inline-block' }} />
@@ -524,13 +503,118 @@ const LegendItem = ({ color, label, stroke }: { color: string; label: string; st
   </div>
 );
 
-const BeforeContext = () => (
-  <PanelSvg>
+// ─── Схема хендофов (SVG): две дорожки, фиксированная геометрия ──────────────
+const ROW_H = 70;
+const FE_Y = 40;
+const BE_Y = FE_Y + ROW_H;
+const PANEL_H = BE_Y + ROW_H + 10;
+
+type SegKind = 'fe' | 'be' | 'ctx' | 'blk';
+const segFill: Record<SegKind, string> = { fe: feColor, be: beColor, ctx: ctxColor, blk: blockerColor };
+
+const Seg = ({ x, w, y, kind, label }: { x: number; w: number; y: number; kind: SegKind; label?: string }) => (
+  <g>
+    <rect x={x} y={y} width={w} height={ROW_H} fill={segFill[kind]} stroke={ink} strokeWidth={kind === 'blk' ? 2.5 : 1} />
+    {label && (
+      <text x={x + w / 2} y={y + ROW_H / 2 + 9} textAnchor="middle" fontSize={26} fill={ink}>
+        {label}
+      </text>
+    )}
+  </g>
+);
+
+const RowLabel = ({ y, children }: { y: number; children: string }) => (
+  <text x={0} y={y + ROW_H / 2 + 9} fontSize={28} fill={ink}>
+    {children}
+  </text>
+);
+
+const PanelLabel = ({ children }: { children: string }) => (
+  <text x={0} y={24} fontSize={26} fontWeight={800} fill={ink} letterSpacing="0.06em">
+    {children}
+  </text>
+);
+
+const Callout = ({ cx, text }: { cx: number; text: string }) => (
+  <g>
+    <text x={cx} y={-64} textAnchor="middle" fontSize={26} fontWeight={600} fill={ink}>
+      {text}
+    </text>
+    <line x1={cx} y1={-48} x2={cx} y2={FE_Y - 12} stroke={ink} strokeWidth={2.5} />
+    <polygon points={`${cx - 8},${FE_Y - 16} ${cx + 8},${FE_Y - 16} ${cx},${FE_Y - 2}`} fill={ink} />
+  </g>
+);
+
+const PanelSvg = ({ children, calloutSpace = 0 }: { children: ReactNode; calloutSpace?: number }) => (
+  <svg width={1640} height={PANEL_H + calloutSpace} viewBox={`0 ${-calloutSpace} 1640 ${PANEL_H + calloutSpace}`} style={{ display: 'block', overflow: 'visible' }}>
+    {children}
+  </svg>
+);
+
+const BeforePlain = () => (
+  <PanelSvg calloutSpace={90}>
     <PanelLabel>ДО ИИ</PanelLabel>
+    <Callout cx={710} text="Блокер / хендоф" />
+    <RowLabel y={FE_Y}>фронтенд</RowLabel>
+    <g className="rs-stagger rs-lay">
+      <Seg y={FE_Y} x={330} w={330} kind="fe" label="работа" />
+      <Seg y={FE_Y} x={660} w={100} kind="blk" />
+      <Seg y={FE_Y} x={760} w={380} kind="fe" />
+      <Seg y={FE_Y} x={1140} w={100} kind="blk" />
+      <Seg y={FE_Y} x={1240} w={390} kind="fe" />
+    </g>
+    <RowLabel y={BE_Y}>бекенд</RowLabel>
+    <g className="rs-stagger rs-lay">
+      <Seg y={BE_Y} x={200} w={360} kind="be" label="работа" />
+      <Seg y={BE_Y} x={560} w={100} kind="blk" />
+      <Seg y={BE_Y} x={660} w={380} kind="be" />
+      <Seg y={BE_Y} x={1040} w={100} kind="blk" />
+      <Seg y={BE_Y} x={1140} w={360} kind="be" />
+    </g>
+  </PanelSvg>
+);
+
+const AfterPlain = () => (
+  <PanelSvg>
+    <PanelLabel>С ИИ</PanelLabel>
+    <RowLabel y={FE_Y}>фронтенд</RowLabel>
+    <g className="rs-stagger rs-lay rs-fast">
+      <Seg y={FE_Y} x={330} w={130} kind="fe" />
+      <Seg y={FE_Y} x={460} w={130} kind="blk" />
+      <Seg y={FE_Y} x={590} w={130} kind="fe" />
+      <Seg y={FE_Y} x={720} w={130} kind="blk" />
+      <Seg y={FE_Y} x={850} w={130} kind="fe" />
+      <Seg y={FE_Y} x={980} w={130} kind="blk" />
+      <Seg y={FE_Y} x={1110} w={130} kind="fe" />
+      <Seg y={FE_Y} x={1240} w={130} kind="blk" />
+      <Seg y={FE_Y} x={1370} w={130} kind="fe" />
+      <Seg y={FE_Y} x={1500} w={130} kind="blk" />
+    </g>
+    <RowLabel y={BE_Y}>бекенд</RowLabel>
+    <g className="rs-stagger rs-lay rs-fast">
+      <Seg y={BE_Y} x={200} w={130} kind="be" />
+      <Seg y={BE_Y} x={330} w={130} kind="blk" />
+      <Seg y={BE_Y} x={460} w={130} kind="be" />
+      <Seg y={BE_Y} x={590} w={130} kind="blk" />
+      <Seg y={BE_Y} x={720} w={130} kind="be" />
+      <Seg y={BE_Y} x={850} w={130} kind="blk" />
+      <Seg y={BE_Y} x={980} w={130} kind="be" />
+      <Seg y={BE_Y} x={1110} w={130} kind="blk" />
+      <Seg y={BE_Y} x={1240} w={130} kind="be" />
+      <Seg y={BE_Y} x={1370} w={130} kind="blk" />
+    </g>
+  </PanelSvg>
+);
+
+const BeforeContext = () => (
+  <PanelSvg calloutSpace={90}>
+    <PanelLabel>ДО ИИ</PanelLabel>
+    <Callout cx={710} text="Блокер / хендоф" />
+    <Callout cx={1305} text="Погружение в бизнес-логику задачи" />
     <RowLabel y={FE_Y}>фронтенд</RowLabel>
     <g className="rs-stagger rs-lay">
       <Seg y={FE_Y} x={330} w={130} kind="ctx" />
-      <Seg y={FE_Y} x={460} w={200} kind="fe" />
+      <Seg y={FE_Y} x={460} w={200} kind="fe" label="работа" />
       <Seg y={FE_Y} x={660} w={100} kind="blk" />
       <Seg y={FE_Y} x={760} w={130} kind="ctx" />
       <Seg y={FE_Y} x={890} w={250} kind="fe" />
@@ -541,7 +625,7 @@ const BeforeContext = () => (
     <RowLabel y={BE_Y}>бекенд</RowLabel>
     <g className="rs-stagger rs-lay">
       <Seg y={BE_Y} x={200} w={130} kind="ctx" />
-      <Seg y={BE_Y} x={330} w={230} kind="be" />
+      <Seg y={BE_Y} x={330} w={230} kind="be" label="работа" />
       <Seg y={BE_Y} x={560} w={100} kind="blk" />
       <Seg y={BE_Y} x={660} w={130} kind="ctx" />
       <Seg y={BE_Y} x={790} w={250} kind="be" />
@@ -594,26 +678,6 @@ const AfterContext = () => (
   </PanelSvg>
 );
 
-// Дисциплина, которую вбирает универсальный инженер.
-const Discipline = ({ title, status, open }: { title: string; status: string; open?: boolean }) => (
-  <div
-    style={{
-      flex: 1,
-      minWidth: 0,
-      background: open ? 'transparent' : surface,
-      border: open ? `2px dashed ${accentSoft}` : `1px solid ${line}`,
-      borderRadius: 'var(--osd-radius)',
-      padding: '32px 32px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12,
-    }}
-  >
-    <div style={{ fontFamily: 'var(--osd-font-display)', fontSize: 34, fontWeight: 700, letterSpacing: '-0.02em' }}>{title}</div>
-    <div style={{ fontSize: 26, fontWeight: 600, color: open ? muted : 'var(--osd-accent)' }}>{status}</div>
-  </div>
-);
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // СТРАНИЦЫ
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -662,7 +726,6 @@ const OpenSpec: Page = () => (
       <Heading size={104}>
         Выбрали <A>OpenSpec</A>
       </Heading>
-      <Lead size={36}>Без долгих сравнений: взяли и пошли внедрять.</Lead>
     </div>
     <div className="rs-stagger rs-d2" style={{ display: 'flex', gap: 20, marginTop: 72, paddingLeft: 66 }}>
       <Chip>простой вход для всех ролей</Chip>
@@ -871,7 +934,51 @@ const Analysts: Page = () => (
   </Frame>
 );
 
-// 09 — Свой сервис спек
+// 09 — Мета-репозиторий
+const MetaRepo: Page = () => (
+  <Frame n="07 · Платформа" title="Мета-репозиторий" lead="Два монолита и пачка сервисов в разных репах. Склеили их в одну точку входа для агента." gap={48}>
+    <div style={{ display: 'flex', gap: 64, alignItems: 'flex-start' }}>
+      <div className="rs-in rs-d1" style={{ flex: 'none' }}>
+        <Code size={26}>
+          <Hl>{'meta-repo/\n'}</Hl>
+          {'├── Makefile        '}
+          <Dim>{'# make up\n'}</Dim>
+          {'├── agents.md       '}
+          <Dim>{'# карта репозиториев\n'}</Dim>
+          <Hl>{'├── openspec/       '}</Hl>
+          <Dim>{'# спеки и changes\n'}</Dim>
+          {'├── frontend/       '}
+          <Dim>{'# монолит · фронт\n'}</Dim>
+          {'│   └── agents.md\n'}
+          {'├── backend/        '}
+          <Dim>{'# монолит · бэк\n'}</Dim>
+          {'│   └── agents.md\n'}
+          {'└── service-*/      '}
+          <Dim>{'# сервисы\n'}</Dim>
+          {'    └── agents.md'}
+        </Code>
+      </div>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 30, paddingTop: 12 }}>
+        <Steps>
+          <Step>
+            <Bullet size={34}>Harness и OpenSpec живут в мета-репе</Bullet>
+          </Step>
+          <Step>
+            <Bullet size={34}>make up клонирует все репы: по сути монорепо</Bullet>
+          </Step>
+          <Step>
+            <Bullet size={34}>agents.md мета-репы — карта проектов</Bullet>
+          </Step>
+          <Step>
+            <Bullet size={34}>В каждой репе свой agents.md, рекурсивно</Bullet>
+          </Step>
+        </Steps>
+      </div>
+    </div>
+  </Frame>
+);
+
+// 10 — Свой сервис спек
 const Spek: Page = () => (
   <Live style={{ padding: `110px ${PAD}px 0` }}>
     <div style={{ display: 'flex', gap: 64, alignItems: 'flex-start' }}>
@@ -926,31 +1033,112 @@ const Practices: Page = () => (
   </Frame>
 );
 
-// 11 — Хендофы
-const Handoffs: Page = () => (
-  <Live style={{ padding: `110px ${PAD}px 0` }}>
-    <div className="rs-in">
-      <Eyebrow style={{ marginBottom: 20 }}>09 · Где спотыкаемся</Eyebrow>
-      <Heading size={68}>Узкое место теперь — хендофы</Heading>
+// 11 — Контроль расползания area и capability
+const Bad = ({ children }: { children: ReactNode }) => <span style={{ color: '#ff8fa3', fontWeight: 700 }}>{children}</span>;
+const SpecSprawl: Page = () => (
+  <Frame
+    n="08 · Практики"
+    title="Контроль расползания area и capability"
+    lead="Без контроля агент на каждый change заводит новую capability, и источник истины дробится."
+    gap={48}
+  >
+    <div style={{ display: 'flex', gap: 72, alignItems: 'flex-start' }}>
+      <div className="rs-in rs-d1" style={{ flex: 'none' }}>
+        <Code size={27}>
+          {'openspec/specs/\n'}
+          <Hl>{'├── auth/'}</Hl>
+          <Dim>{'              # area\n'}</Dim>
+          {'│   ├── login/'}
+          <Dim>{'         # capability\n'}</Dim>
+          {'│   ├── sign-in/       '}
+          <Bad>{'← дубль\n'}</Bad>
+          {'│   └── session/\n'}
+          <Hl>{'└── profile/\n'}</Hl>
+          {'    ├── settings/\n'}
+          {'    └── user-settings/ '}
+          <Bad>{'← дубль'}</Bad>
+        </Code>
+      </div>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 30, paddingTop: 12 }}>
+        <Steps>
+          <Step>
+            <Bullet size={34}>Список area фиксируем мы, а не агент</Bullet>
+          </Step>
+          <Step>
+            <Bullet size={34}>На propose сначала ищем готовую capability</Bullet>
+          </Step>
+          <Step>
+            <Bullet size={34}>Новая capability — только с обоснованием на ревью</Bullet>
+          </Step>
+          <Step>
+            <Bullet size={34}>Дубли регулярно сливаем обратно</Bullet>
+          </Step>
+        </Steps>
+      </div>
     </div>
-    <div style={{ marginTop: 40 }}>
-      <BeforeContext />
-    </div>
+  </Frame>
+);
+
+// Хендофы: работа стала короче передачи
+const HandoffsExpensive: Page = () => (
+  <Live style={{ padding: `100px ${PAD}px 0` }}>
     <Steps>
+      <div className="rs-in">
+        <Eyebrow>09 · Где спотыкаемся: хендофы</Eyebrow>
+        <div style={{ marginTop: 20 }}>
+          <Heading size={72}>Работа стала короче хендофа</Heading>
+        </div>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <BeforePlain />
+      </div>
+      <Step>
+        <div style={{ marginTop: 24 }}>
+          <AfterPlain />
+        </div>
+      </Step>
+    </Steps>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 48, marginTop: 28 }}>
+      <LegendItem color={feColor} label="фронтенд" />
+      <LegendItem color={beColor} label="бекенд" />
+      <LegendItem color={blockerColor} label="блокер / хендоф" stroke />
+      <div style={{ flex: 1 }} />
+      <div style={{ fontSize: 30, fontWeight: 600, maxWidth: 760, lineHeight: 1.35 }}>
+        Пока задача идёт от фронтенда к бекенду и обратно, агент уже мог бы её закончить.
+      </div>
+    </div>
+    <Footer />
+  </Live>
+);
+
+const HandoffsContext: Page = () => (
+  <Live style={{ padding: `100px ${PAD}px 0` }}>
+    <Steps>
+      <div className="rs-in">
+        <Eyebrow>09 · Где спотыкаемся: хендофы</Eyebrow>
+        <div style={{ marginTop: 20 }}>
+          <Heading size={72}>Погружение в задачу плохо сжимается</Heading>
+        </div>
+      </div>
+      <Step>
+        <div style={{ marginTop: 16 }}>
+          <BeforeContext />
+        </div>
+      </Step>
       <Step>
         <div style={{ marginTop: 24 }}>
           <AfterContext />
         </div>
       </Step>
       <Step>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 40, marginTop: 32 }}>
-          <LegendItem color={ctxColor} label="погружение" />
-          <LegendItem color={feColor} label="фронт" />
-          <LegendItem color={beColor} label="бек" />
-          <LegendItem color="#ffffff" label="хендоф" stroke />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 48, marginTop: 28 }}>
+          <LegendItem color={ctxColor} label="погружение в бизнес-логику" />
+          <LegendItem color={feColor} label="фронтенд" />
+          <LegendItem color={beColor} label="бекенд" />
+          <LegendItem color={blockerColor} label="блокер / хендоф" stroke />
           <div style={{ flex: 1 }} />
-          <div style={{ fontSize: 30, fontWeight: 600, maxWidth: 820, lineHeight: 1.35 }}>
-            Агент сжал работу, но передача и повторное погружение не сжимаются.
+          <div style={{ fontSize: 28, fontWeight: 600, maxWidth: 720, lineHeight: 1.35 }}>
+            Каждая передача — это повторное погружение. Дешевле, чтобы фичу целиком вёл один инженер.
           </div>
         </div>
       </Step>
@@ -959,29 +1147,184 @@ const Handoffs: Page = () => (
   </Live>
 );
 
-// 12 — Универсальные инженеры
-const Universal: Page = () => (
-  <Frame n="10 · Куда идём" title="Основные проекты тоже ведём к универсалам" lead="В новых продуктах это уже работает. Теперь переносим модель на основные." gap={56}>
-    <div className="rs-steps-row" style={{ display: 'flex', gap: 20 }}>
-      <Steps>
-        <Step>
-          <Discipline title="Аналитика" status="закрывается" />
-        </Step>
-        <Step>
-          <Discipline title="QA / e2e" status="закрывается" />
-        </Step>
-        <Step>
-          <Discipline title="DevOps" status="с платформой" />
-        </Step>
-        <Step>
-          <Discipline title="Фронт + бек" status="открытый вопрос" open />
-        </Step>
-      </Steps>
+// Куда идём: универсальный инженер (перенесено из aaa-ai-2026)
+const LinkArrow = ({ label, both }: { label: string; both?: boolean }) => (
+  <div style={{ width: 150, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+    <svg width={150} height={28} viewBox="0 0 150 28">
+      <line x1={both ? 22 : 0} y1={14} x2={128} y2={14} stroke={ink} strokeWidth={3} />
+      <polygon points="126,4 150,14 126,24" fill={ink} />
+      {both && <polygon points="24,4 0,14 24,24" fill={ink} />}
+    </svg>
+    <div style={{ fontSize: 20, color: muted, textAlign: 'center', lineHeight: 1.25 }}>{label}</div>
+  </div>
+);
+
+const Chevron = ({ label, color }: { label: string; color: string }) => (
+  <div
+    style={{
+      flex: 1,
+      height: 56,
+      background: color,
+      clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%, 18px 50%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 22,
+      fontWeight: 700,
+      color: ink,
+    }}
+  >
+    {label}
+  </div>
+);
+
+
+const RoleCell = ({ label, span = 1, hot, dim }: { label: string; span?: number; hot?: boolean; dim?: boolean }) => {
+  const emph = !dim && (hot || span > 1);
+  return (
+    <div
+      style={{
+        gridColumn: `span ${span}`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        padding: '4px 0',
+        borderTop: emph ? '3px solid var(--osd-accent)' : `3px solid ${line}`,
+        opacity: dim ? 0.5 : 1,
+      }}
+    >
+      <svg width={28} height={28} viewBox="0 0 28 28" fill="none" stroke={emph ? '#6f00ff' : muted} strokeWidth={2}>
+        <circle cx={14} cy={9} r={6} />
+        <path d="M3 27c1.5-7 6-10 11-10s9.5 3 11 10" />
+      </svg>
+      <div style={{ fontSize: 22, fontWeight: emph ? 700 : 500, color: emph ? 'var(--osd-text)' : muted, textAlign: 'center', whiteSpace: 'nowrap' }}>{label}</div>
     </div>
-    <Punch>
-      Сквозной SDD как раз и делает это возможным: <A>один язык</A> и <A>один артефакт</A> на весь цикл.
-    </Punch>
-  </Frame>
+  );
+};
+
+
+const CHEV = { idea: '#f3d98a', req: '#dfe08e', dev: '#bfe0a3', test: '#a9dcc4', deploy: '#a7d2d8', support: '#f2b8cf' };
+
+const ModelBlock = ({
+  eyebrow,
+  title,
+  items,
+  stages,
+  roles,
+  cols,
+  accent,
+}: {
+  eyebrow: string;
+  title: string;
+  items: [string, string, string];
+  stages: ReactNode;
+  roles: ReactNode;
+  cols: number;
+  accent?: boolean;
+}) => (
+  <div
+    style={{
+      flex: 1,
+      minWidth: 0,
+      background: surface,
+      border: accent ? '3px solid var(--osd-accent)' : `1px solid ${line}`,
+      borderRadius: 'var(--osd-radius)',
+      padding: '28px 36px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 18,
+    }}
+  >
+    <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--osd-accent)', whiteSpace: 'nowrap' }}>{eyebrow}</div>
+    <div style={{ fontFamily: 'var(--osd-font-display)', fontSize: 40, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{title}</div>
+    <div style={{ display: 'flex', gap: 6 }}>{stages}</div>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 6, marginTop: -8 }}>{roles}</div>
+    <ul style={{ margin: 0, paddingLeft: 32, fontSize: 26, lineHeight: 1.35, listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <li>{items[0]}</li>
+      <li>{items[1]}</li>
+      <li>{items[2]}</li>
+    </ul>
+  </div>
+);
+
+
+const OurModel: Page = () => (
+  <Live style={{ padding: `100px ${PAD}px 0` }}>
+    <Steps>
+      <div className="rs-in">
+        <Eyebrow>10 · Куда идём: универсальный инженер</Eyebrow>
+        <div style={{ marginTop: 20 }}>
+          <Heading size={64}>Нужен человек на границе</Heading>
+        </div>
+        <p style={{ fontSize: 30, lineHeight: 1.4, color: muted, margin: '16px 0 0' }}>
+          Мы не внутри продукта: у нас внешние заказчики и договорные отношения. Поэтому граница с заказчиком остаётся за человеком.
+        </p>
+      </div>
+      <div className="rs-steps-row" style={{ display: 'flex', alignItems: 'stretch', gap: 0, marginTop: 32 }}>
+        <div
+          style={{
+            width: 220,
+            flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            background: 'var(--osd-bg)',
+            border: `2px dashed ${muted}`,
+            borderRadius: 'var(--osd-radius)',
+            padding: 24,
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontFamily: 'var(--osd-font-display)', fontSize: 36, fontWeight: 800 }}>Заказчик</div>
+          <div style={{ fontSize: 22, color: muted, lineHeight: 1.3 }}>внешний, по договору</div>
+        </div>
+        <LinkArrow label="договор, сроки, бюджет" both />
+        <Step>
+          <ModelBlock
+            eyebrow="Блок 1 · Front-office"
+            title="ПМ и аналитик"
+            cols={2}
+            stages={
+              <>
+                <Chevron label="Idea" color={CHEV.idea} />
+                <Chevron label="Req" color={CHEV.req} />
+              </>
+            }
+            roles={
+              <>
+                <RoleCell label="ПМ" hot />
+                <RoleCell label="Аналитик" hot />
+              </>
+            }
+            items={['ПМ: договор, сроки, бюджет, ожидания заказчика', 'Аналитик: постановка задачи и приёмка результата', 'Иногда это два человека, иногда один']}
+          />
+        </Step>
+        <LinkArrow label="спека → результат" both />
+        <Step>
+          <ModelBlock
+            eyebrow="Блок 2 · Производство"
+            title="Универсальный инженер"
+            accent
+            cols={4}
+            stages={
+              <>
+                <Chevron label="Req" color={CHEV.req} />
+                <Chevron label="Dev" color={CHEV.dev} />
+                <Chevron label="Test" color={CHEV.test} />
+                <Chevron label="Deploy" color={CHEV.deploy} />
+              </>
+            }
+            roles={<RoleCell label="Инженер + агенты" span={4} />}
+            items={['Ведёт задачу целиком: фронт, бекенд, тесты, деплой', 'Управляет агентами, а не пишет руками', 'Отвечает за результат, а не за роль']}
+          />
+        </Step>
+      </div>
+    </Steps>
+    <Footer />
+  </Live>
 );
 
 // 13 — Финал
@@ -1029,9 +1372,12 @@ export default [
   TestPlan,
   DevSplit,
   Analysts,
+  MetaRepo,
   Spek,
   Practices,
-  Handoffs,
-  Universal,
+  SpecSprawl,
+  HandoffsExpensive,
+  HandoffsContext,
+  OurModel,
   Thanks,
 ] satisfies Page[];
